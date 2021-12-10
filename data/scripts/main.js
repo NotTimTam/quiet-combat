@@ -2,7 +2,8 @@
 
 // Create renderer.
 let draw = new Renderer();
-let player = new Player();
+let world = new World(devLevel);
+let player = new Player(16, 16);
 
 // Game Loop.
 function loop() {
@@ -13,6 +14,7 @@ function loop() {
 
 	// RENDER
 	draw.clear();
+	draw.renderLevel2d(world);
 	player.render(draw.ctx);
 
 	// Display Dev Renders

@@ -75,4 +75,29 @@ class Renderer {
 
 		this.ctx.closePath();
 	}
+
+	renderLevel2d(world) {
+		let level = world.level;
+		let wallSize = world.wallSize;
+
+		for (let y in level) {
+			for (let x in level[y]) {
+				// If there is a wall here.
+				if (level[y][x] != 0) {
+					// Draw the wall.
+					this.ctx.beginPath();
+
+					this.ctx.fillStyle = "green";
+					this.ctx.fillRect(
+						x * wallSize,
+						y * wallSize,
+						wallSize,
+						wallSize
+					);
+
+					this.ctx.closePath();
+				}
+			}
+		}
+	}
 }
