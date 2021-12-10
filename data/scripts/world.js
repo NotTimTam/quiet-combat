@@ -1,7 +1,14 @@
 "use strict";
 
+const wallSize = 16;
+
 class Wall {
-	constructor(wallType) {
+	constructor(x, y, wallType) {
+		this.x = x * wallSize;
+		this.y = y * wallSize;
+		this.width = wallSize;
+		this.height = wallSize;
+
 		this.wallType = wallType;
 	}
 }
@@ -10,9 +17,16 @@ class World {
 	constructor(level) {
 		this.levelData = level;
 		this.level = [];
-		this.wallSize = 16;
+		this.wallSize = wallSize;
 
 		this.generateLevel();
+	}
+
+	// Get the wall at a position.
+	getWall(x, y) {
+		if (!this.level[y] || !this.level[y][x]) return false;
+
+		return this.level[y][x];
 	}
 
 	// Loop through leveldata and create world.
@@ -26,11 +40,9 @@ class World {
 						this.level[y] = [];
 					}
 
-					this.level[y][x] = new Wall(this.levelData[y][x]);
+					this.level[y][x] = new Wall(x, y, this.levelData[y][x]);
 				}
 			}
 		}
-
-		console.log(this.level);
 	}
 }

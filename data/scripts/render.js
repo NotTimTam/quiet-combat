@@ -88,6 +88,13 @@ class Renderer {
 					this.ctx.beginPath();
 
 					this.ctx.fillStyle = "green";
+					if (
+						math.distance(level[y][x], player) <=
+						wallSize + (player.width + player.height) / 2
+					) {
+						this.ctx.fillStyle = "yellow";
+					}
+
 					this.ctx.fillRect(
 						x * wallSize,
 						y * wallSize,
@@ -99,5 +106,13 @@ class Renderer {
 				}
 			}
 		}
+
+		this.ctx.beginPath();
+
+		this.ctx.fillStyle = "red";
+
+		this.ctx.fillRect(player.x, player.y, player.width, player.height);
+
+		this.ctx.closePath();
 	}
 }

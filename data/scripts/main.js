@@ -15,7 +15,6 @@ function loop() {
 	// RENDER
 	draw.clear();
 	draw.renderLevel2d(world);
-	player.render(draw.ctx);
 
 	// Display Dev Renders
 	if (settings.dev_mode) {
