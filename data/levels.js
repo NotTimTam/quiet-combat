@@ -164,3 +164,5 @@ const levels = {
 		],
 	],
 };
+
+module.exports = levels;

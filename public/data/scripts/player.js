@@ -8,6 +8,12 @@ class Player {
 		this.width = 8;
 		this.height = 8;
 		this.angle = 0;
+		this.health = 100;
+
+		this.scoreboard = {
+			deaths: 0,
+			kills: 0,
+		};
 
 		// Lighting system.
 		this.light = {
@@ -85,6 +91,10 @@ class Player {
 
 		window.onkeyup = (e) => {
 			this.keys[e.key] = false;
+		};
+
+		window.onmousedown = (e) => {
+			fireProjectile();
 		};
 	}
 
@@ -200,6 +210,18 @@ class Player {
 		}
 	}
 
+	respawn() {
+		let newLoc = world.getSpawn();
+		this.x = newLoc.x;
+		this.y = newLoc.y;
+	}
+
+	kill() {
+		this.scoreboard.deaths++;
+		this.respawn();
+		this.health = 100;
+	}
+
 	input() {
 		// Check for collisions in the direction of travel and then apply the travel if there are none.
 		if (this.keys.d || this.keys.ArrowRight) {
@@ -220,6 +242,11 @@ class Player {
 	}
 
 	logic() {
+		// If we are dead, respawn.
+		if (this.health <= 0) {
+			this.kill();
+		}
+
 		// Move camera to target.
 		this.camera.smoothMove();
 
