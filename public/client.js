@@ -5,12 +5,16 @@ let ping = {
 	lastSubmit: 0,
 	time: 0,
 };
-let roomName = window.location.hash.slice(1, window.location.hash.length);
+let roomName = window.location.hash.slice(1, window.location.hash.indexOf("-"));
+let playerName = window.location.hash.slice(
+	window.location.hash.indexOf("-"),
+	window.location.hash.length
+);
 
 socket // SOCKET
 	.on("connect", () => {
 		console.log(`joined with id ${socket.id}`); // ojIckSD2jqNzOqIrAGzL
-		socket.emit("joinRoom", roomName);
+		socket.emit("joinRoom", roomName, playerName);
 	})
 
 	// Getting clientdata from the server.
@@ -24,6 +28,12 @@ socket // SOCKET
 	// Recieving damage.
 	.on("damage", (damage) => {
 		player.health -= damage;
+
+		// Kill the player if their health is at zero.
+		if (player.health <= 0) {
+			player.kill();
+			socket.emit("playerDied");
+		}
 	})
 
 	// Getting game data from the server.
@@ -33,6 +43,11 @@ socket // SOCKET
 
 	// If we failed to get data.
 	.on("failedToJoinRoom", () => {
+		window.location.href = "/";
+	})
+
+	// If the server kicks us. Usually when the server restarts.
+	.on("disconnectedByServer", () => {
 		window.location.href = "/";
 	});
 

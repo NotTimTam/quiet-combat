@@ -20,6 +20,13 @@ const time = () => {
 let updateRate = 1000 / 60;
 
 const rooms = [];
+const addToChatlog = (room, msg) => {
+	room.chatLog.push(msg);
+
+	while (room.chatLog.length > 5) {
+		room.chatLog.shift();
+	}
+};
 
 const getClients = async (id, roomName) => {
 	let clients = await io.in(roomName).fetchSockets();
@@ -118,6 +125,11 @@ io.on("connection", (socket) => {
 	socket.on("data", async (positionalData) => {
 		let room = rooms.find((room) => room.name == socket.assignedRoom);
 
+		if (!room) {
+			io.to(socket.id).emit("disconnectedByServer");
+			return;
+		}
+
 		// If the client is spamming request to the server.
 		if (Date.now() - socket.lastRequest < 16) {
 			return;
@@ -179,14 +191,23 @@ io.on("connection", (socket) => {
 	});
 
 	// When a socket creates a new room.
-	socket.on("createRoom", (socketId, room) => {
-		if (!room.name || rooms.find((roomser) => roomser.name == room.name)) {
+	socket.on("createRoom", (socketId, room, map) => {
+		if (
+			!room.name ||
+			room.name == "noname" ||
+			rooms.find((roomser) => roomser.name == room.name)
+		) {
 			room.name = `ROOM-${rooms.length + 1}`;
 		}
 		room.clients = [];
 		room.projectiles = [];
+		room.chatLog = [];
 
-		const gameData = { level: levels["rust"] };
+		if (!map || map == "Select Map") {
+			map = "rust";
+		}
+
+		const gameData = { level: levels[map], levelName: map };
 		const world = new World(gameData);
 
 		room.world = world;
@@ -197,12 +218,14 @@ io.on("connection", (socket) => {
 	});
 
 	// When a socket joins a new room.
-	socket.on("joinRoom", (roomName) => {
+	socket.on("joinRoom", (roomName, playerName) => {
 		try {
 			const room = rooms.find((room) => room.name == roomName);
 			if (room.clients.length < room.maxClients) {
 				socket.join(room.name);
 				socket.assignedRoom = room.name;
+				socket.username = playerName;
+				console.log(playerName);
 				room.clients.push(socket);
 				io.to(socket.id).emit("initialized", room.world.gameData);
 			} else {
@@ -218,16 +241,27 @@ io.on("connection", (socket) => {
 		io.to(socket.id).emit(
 			"roomList",
 			rooms.map((room) => {
-				const { name, clients, maxClients } = room;
+				const { name, clients, maxClients, world } = room;
 
-				return { name, clients: clients.length, maxClients };
+				return {
+					name,
+					clients: clients.length,
+					maxClients,
+					level: world.gameData.levelName,
+				};
 			})
 		);
 	});
+
+	// When a socket player dies.
+	socket.on("playerDied", () => {
+		let room = rooms.find((room) => room.name == socket.assignedRoom);
+		addToChatlog(room, `${socket.username} died`);
+	});
 });
 
-server.listen(port, '0.0.0.0');
+server.listen(port, "0.0.0.0");
 
 //  () => {
-	// console.log(`[${time()}] listening on port ${port}`);
+// console.log(`[${time()}] listening on port ${port}`);
 // }

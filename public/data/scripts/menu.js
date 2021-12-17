@@ -7,16 +7,22 @@ socket // SOCKET
 		console.log(`joined with id ${socket.id}`); // ojIckSD2jqNzOqIrAGzL
 	})
 	.on("roomCreated", (room) => {
-		window.location.href = `/game.html#${room.name}`;
+		window.location.href = `/game.html#${room.name}-${
+			document.querySelector("#username").value
+		}`;
 	})
 	.on("roomList", (roomList) => {
 		let roomDisp = document.querySelector(".rooms");
-		roomDisp.innerHTML = "";
+		roomDisp.innerHTML = `<div>
+		<span>Name</span>
+		<span>Players</span>
+		<span>Map</span>
+		</div>`;
 
 		storedRoomList = roomList;
 
 		if (roomList.length == 0) {
-			roomDisp.innerHTML = `<button class="room full">
+			roomDisp.innerHTML += `<button class="room full">
 				<h5>No rooms available.<h5>
 			</button>`;
 		} else {
@@ -27,6 +33,7 @@ socket // SOCKET
 					}" onclick="joinRoom('${room.name}')">
 						<h5>${room.name}</h5>
 						<h5>${room.clients}/${room.maxClients}</h5>
+						<h5>${room.level}</h5>
 					</button>
 				`;
 			}
@@ -42,14 +49,16 @@ const loadRooms = () => {
 const joinRoom = (roomName) => {
 	let room = storedRoomList.find((room) => room.name == roomName);
 	if (room.clients < room.maxClients) {
-		window.location.href = `/game.html#${room.name}`;
+		window.location.href = `/game.html#${room.name}-${
+			document.querySelector("#username").value
+		}`;
 	}
 };
 
 const play = () => {
 	let name = document.querySelector("#roomName").value;
 	if (!name) {
-		name = null;
+		name = "noname";
 	}
 	if (name.length > 32) {
 		name = name.slice(0, 32);
@@ -62,8 +71,15 @@ const play = () => {
 		maxClients = 10;
 	}
 
-	socket.emit("createRoom", socket.id, {
-		name,
-		maxClients,
-	});
+	let map = document.querySelector("#map").value;
+
+	socket.emit(
+		"createRoom",
+		socket.id,
+		{
+			name,
+			maxClients,
+		},
+		map
+	);
 };

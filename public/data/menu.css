@@ -35,7 +35,8 @@ main {
 	gap: 1rem;
 }
 
-button {
+button,
+.rooms div {
 	outline: none;
 	padding: 1rem 3rem;
 	color: white;
@@ -108,7 +109,8 @@ h4 {
 	width: max-content;
 }
 
-.room {
+.room,
+.rooms div {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -136,6 +138,26 @@ input {
 	padding: 0.5rem 1rem;
 	border: 2px solid skyblue;
 }
+select {
+	outline: none;
+	background: none;
+	color: skyblue;
+	font-weight: bold;
+
+	padding: 0.5rem;
+
+	border: 2px solid skyblue;
+}
+option {
+	background: black;
+}
 ::placeholder {
 	color: skyblue;
+}
+
+.rooms div {
+	border-left: none;
+	border-right: none;
+	border-top: none;
+	font-size: 0.75rem;
 }

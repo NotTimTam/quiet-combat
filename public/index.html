@@ -11,6 +11,13 @@
 	<body>
 		<main>
 			<div class="buttons">
+				<input
+					type="text"
+					name="username"
+					placeholder="Username"
+					maxlength="16"
+					id="username"
+				/>
 				<button
 					onclick="document.querySelector('.hostMenu').classList.remove('hidden');"
 				>
@@ -42,6 +49,11 @@
 					max="10"
 					id="playerCount"
 				/>
+				<select name="map" id="map">
+					<option>Select Map</option>
+					<option value="rust">Rust</option>
+					<option value="bigEmpty">The Big Empty</option>
+				</select>
 				<button onclick="play()">PLAY</button>
 			</div>
 			<div class="joinMenu hidden">

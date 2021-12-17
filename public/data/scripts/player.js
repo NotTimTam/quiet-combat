@@ -254,11 +254,6 @@ class Player {
 	}
 
 	logic() {
-		// If we are dead, respawn.
-		if (this.health <= 0) {
-			this.kill();
-		}
-
 		// Move camera to target.
 		this.camera.smoothMove();
 
