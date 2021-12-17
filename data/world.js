@@ -14,8 +14,9 @@ class Wall {
 }
 
 class World {
-	constructor(level) {
-		this.levelData = level;
+	constructor(gameData) {
+		this.gameData = gameData;
+		this.levelData = gameData.level;
 		this.level = [];
 		this.wallSize = wallSize;
 

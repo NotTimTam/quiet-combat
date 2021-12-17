@@ -78,6 +78,7 @@ class Player {
 		this.mouse = {
 			x: 0,
 			y: 0,
+			down: false,
 		};
 		window.addEventListener("mousemove", (e) => {
 			this.mouse.x = (e.clientX / window.innerWidth) * draw.canvas.width;
@@ -93,8 +94,12 @@ class Player {
 			this.keys[e.key] = false;
 		};
 
+		this.lastBullet = 0;
 		window.onmousedown = (e) => {
-			fireProjectile();
+			this.mouse.down = true;
+		};
+		window.onmouseup = (e) => {
+			this.mouse.down = false;
 		};
 	}
 
@@ -238,6 +243,13 @@ class Player {
 
 		if (this.keys.s || this.keys.ArrowDown) {
 			this.physics.yVel += this.physics.accel;
+		}
+
+		// Shooting.
+		const bulletTime = 250;
+		if (this.mouse.down && Date.now() - this.lastBullet > bulletTime) {
+			this.lastBullet = Date.now();
+			fireProjectile();
 		}
 	}
 

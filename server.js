@@ -19,11 +19,10 @@ const time = () => {
 
 let updateRate = 1000 / 60;
 
-const gameData = { level: levels["rust"] };
-const world = new World(gameData.level);
+const rooms = [];
 
-const getClients = async (id) => {
-	let clients = await io.fetchSockets();
+const getClients = async (id, roomName) => {
+	let clients = await io.in(roomName).fetchSockets();
 
 	if (id) {
 		clients = clients.filter((client) => client.id != id);
@@ -37,28 +36,26 @@ const getClients = async (id) => {
 
 	return clients;
 };
-const projectiles = [];
 class Projectile {
-	constructor(x, y, angle, client = {}) {
+	constructor(x, y, angle, client = {}, room) {
 		this.x = x;
 		this.y = y;
 		this.width = 2;
 		this.height = 2;
 		this.angle = angle;
-		this.velocity = 5;
+		this.velocity = 10;
 
-		this.damage = 5;
+		this.damage = 10;
 
 		this.color = "red";
 
 		this.origin = client;
+		this.room = room;
 		if (!this.origin.id) this.origin.id = null;
-
-		projectiles.push(this);
 	}
 
 	delete() {
-		projectiles.splice(projectiles.indexOf(this), 1);
+		this.room.projectiles.splice(this.room.projectiles.indexOf(this), 1);
 	}
 
 	async move() {
@@ -67,7 +64,7 @@ class Projectile {
 		this.y += newPos.y;
 
 		// Check collisions.
-		let clients = await getClients(this.origin.id);
+		let clients = await getClients(this.origin.id, this.room.name);
 		for (let client of clients) {
 			if (
 				client &&
@@ -86,10 +83,10 @@ class Projectile {
 		}
 
 		let wallPos = {
-			x: Math.round(this.x / world.wallSize - 0.5),
-			y: Math.round(this.y / world.wallSize - 0.5),
+			x: Math.round(this.x / this.room.world.wallSize - 0.5),
+			y: Math.round(this.y / this.room.world.wallSize - 0.5),
 		};
-		let wall = world.getWall(wallPos.x, wallPos.y);
+		let wall = this.room.world.getWall(wallPos.x, wallPos.y);
 
 		// Do a collision check.
 		if (wallPos) {
@@ -101,12 +98,14 @@ class Projectile {
 }
 
 setInterval(() => {
-	for (let projectile of projectiles) {
-		projectile.move();
-	}
+	for (let room of rooms) {
+		for (let projectile of room.projectiles) {
+			projectile.move();
+		}
 
-	while (projectiles.length > 999) {
-		projectiles.shift();
+		while (room.projectiles.length > 999) {
+			room.projectiles.shift();
+		}
 	}
 }, updateRate);
 
@@ -115,16 +114,16 @@ app.use(express.static("./public"));
 io.on("connection", (socket) => {
 	console.log(`[${time()}] ${socket.id} connected`);
 
-	io.to(socket.id).emit("initialized", gameData);
-
 	// When the socket asks for data.
 	socket.on("data", async (positionalData) => {
+		let room = rooms.find((room) => room.name == socket.assignedRoom);
+
 		// If the client is spamming request to the server.
 		if (Date.now() - socket.lastRequest < 16) {
 			return;
 		}
 
-		let clients = await getClients(socket.id);
+		let clients = await getClients(socket.id, room.name);
 
 		socket.positionalData = positionalData;
 		socket.lastRequest = Date.now();
@@ -132,7 +131,7 @@ io.on("connection", (socket) => {
 		io.to(socket.id).emit(
 			"data",
 			clients,
-			projectiles.map((projectile) => {
+			room.projectiles.map((projectile) => {
 				const { x, y, width, height, color } = projectile;
 
 				return {
@@ -148,22 +147,87 @@ io.on("connection", (socket) => {
 
 	// When the socket creates a projectile.
 	socket.on("projectile", (positionalData) => {
-		new Projectile(
-			positionalData.x,
-			positionalData.y,
-			positionalData.angle,
-			socket
+		let room = rooms.find((room) => room.name == socket.assignedRoom);
+		room.projectiles.push(
+			new Projectile(
+				positionalData.x,
+				positionalData.y,
+				positionalData.angle,
+				socket,
+				room
+			)
 		);
 	});
 
 	// When a socket leaves.
 	socket.on("disconnect", () => {
-		console.log(`[${time()}] ${socket.id} disconnected`);
+		// Close connection and remove socket from room.
+		try {
+			let room = rooms.find((room) => room.name == socket.assignedRoom);
+			room.clients.splice(room.clients.indexOf(socket), 1);
+
+			// Delete the room if it has no players.
+			if (room.clients.length == 0) {
+				rooms.splice(rooms.indexOf(room));
+			}
+			console.log(`[${time()}] ${socket.id} disconnected`);
+		} catch {
+			console.log(`[${time()}] ${socket.id} is loading into room`);
+		}
 
 		socket.conn.close();
 	});
+
+	// When a socket creates a new room.
+	socket.on("createRoom", (socketId, room) => {
+		if (!room.name || rooms.find((roomser) => roomser.name == room.name)) {
+			room.name = `ROOM-${rooms.length + 1}`;
+		}
+		room.clients = [];
+		room.projectiles = [];
+
+		const gameData = { level: levels["rust"] };
+		const world = new World(gameData);
+
+		room.world = world;
+
+		rooms.push(room);
+		console.log(`[${time()}] ${socketId} created room "${room.name}"`);
+		io.to(socketId).emit("roomCreated", room);
+	});
+
+	// When a socket joins a new room.
+	socket.on("joinRoom", (roomName) => {
+		try {
+			const room = rooms.find((room) => room.name == roomName);
+			if (room.clients.length < room.maxClients) {
+				socket.join(room.name);
+				socket.assignedRoom = room.name;
+				room.clients.push(socket);
+				io.to(socket.id).emit("initialized", room.world.gameData);
+			} else {
+				io.to(socket.id).emit("failedToJoinRoom");
+			}
+		} catch {
+			io.to(socket.id).emit("failedToJoinRoom");
+		}
+	});
+
+	// When a socket asks for all the rooms.
+	socket.on("getRooms", () => {
+		io.to(socket.id).emit(
+			"roomList",
+			rooms.map((room) => {
+				const { name, clients, maxClients } = room;
+
+				return { name, clients: clients.length, maxClients };
+			})
+		);
+	});
 });
 
-server.listen(port, () => {
-	console.log(`[${time()}] listening on port ${port}`);
-});
+server.listen(port, '0.0.0.0');
+
+//  () => {
+	// console.log(`[${time()}] listening on port ${port}`);
+// }

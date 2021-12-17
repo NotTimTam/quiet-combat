@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Quiet Combat</title>
+
+		<link rel="stylesheet" href="./data/game.css" />
+	</head>
+	<body>
+		<!-- RENDER TARGET -->
+		<canvas></canvas>
+
+		<!-- SOCKET.IO -->
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			let socket = io();
+		</script>
+
+		<!-- LIBS -->
+		<script src="./data/scripts/math.js"></script>
+
+		<!-- SETTINGS -->
+		<script src="./data/scripts/settings.js"></script>
+
+		<!-- DATA/PROCESSES -->
+		<script src="./data/scripts/world.js"></script>
+		<script src="./data/scripts/player.js"></script>
+		<script src="./data/scripts/render.js"></script>
+
+		<!-- EXECUTION -->
+		<script src="./data/scripts/main.js"></script>
+
+		<!-- INITIALIZE CLIENT LAST -->
+		<script src="./client.js"></script>
+	</body>
+</html>

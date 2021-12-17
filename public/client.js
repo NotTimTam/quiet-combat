@@ -5,10 +5,12 @@ let ping = {
 	lastSubmit: 0,
 	time: 0,
 };
+let roomName = window.location.hash.slice(1, window.location.hash.length);
 
 socket // SOCKET
 	.on("connect", () => {
 		console.log(`joined with id ${socket.id}`); // ojIckSD2jqNzOqIrAGzL
+		socket.emit("joinRoom", roomName);
 	})
 
 	// Getting clientdata from the server.
@@ -27,6 +29,11 @@ socket // SOCKET
 	// Getting game data from the server.
 	.on("initialized", (data) => {
 		initializeGame(data);
+	})
+
+	// If we failed to get data.
+	.on("failedToJoinRoom", () => {
+		window.location.href = "/";
 	});
 
 const getData = async () => {
