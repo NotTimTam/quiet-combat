@@ -4,33 +4,80 @@
 		<meta charset="UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>(ALPHA)</title>
+		<title>Quiet Combat</title>
 
-		<link rel="stylesheet" href="./data/style.css" />
+		<link rel="stylesheet" href="./data/menu.css" />
 	</head>
 	<body>
+		<main>
+			<div class="buttons">
+				<input
+					type="text"
+					name="username"
+					placeholder="Username"
+					maxlength="16"
+					id="username"
+				/>
+				<button
+					onclick="document.querySelector('.hostMenu').classList.remove('hidden');"
+				>
+					Host
+				</button>
+				<button onclick="loadRooms()">Join</button>
+			</div>
+
+			<div class="hostMenu hidden">
+				<h4>HOST</h4>
+				<button
+					class="closeButton"
+					onclick="document.querySelector('.hostMenu').classList.add('hidden')"
+				>
+					X
+				</button>
+
+				<input
+					type="text"
+					name="roomName"
+					placeholder="Room Name"
+					maxlength="32"
+					id="roomName"
+				/>
+				<input
+					type="number"
+					name="playerCount"
+					placeholder="Max Players"
+					max="10"
+					id="playerCount"
+				/>
+				<select name="map" id="map">
+					<option>Select Map</option>
+					<option value="rust">Rust</option>
+					<option value="bigEmpty">The Big Empty</option>
+				</select>
+				<button onclick="play()">PLAY</button>
+			</div>
+			<div class="joinMenu hidden">
+				<h4>JOIN</h4>
+				<button
+					class="closeButton"
+					onclick="document.querySelector('.joinMenu').classList.add('hidden')"
+				>
+					X
+				</button>
+				<div class="rooms"></div>
+			</div>
+		</main>
+
 		<!-- SOCKET.IO -->
 		<script src="/socket.io/socket.io.js"></script>
 		<script>
 			let socket = io();
 		</script>
 
-		<!-- LIBS -->
-		<script src="./data/scripts/math.js"></script>
-
 		<!-- SETTINGS -->
 		<script src="./data/scripts/settings.js"></script>
 
-		<!-- DATA/PROCESSES -->
-		<script src="./data/scripts/levels.js"></script>
-		<script src="./data/scripts/world.js"></script>
-		<script src="./data/scripts/player.js"></script>
-		<script src="./data/scripts/render.js"></script>
-
 		<!-- EXECUTION -->
-		<script src="./data/scripts/main.js"></script>
-
-		<!-- INITIALIZE CLIENT LAST -->
-		<script src="./client.js"></script>
+		<script src="./data/scripts/menu.js"></script>
 	</body>
 </html>

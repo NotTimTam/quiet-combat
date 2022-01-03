@@ -3,8 +3,7 @@
 class Renderer {
 	constructor() {
 		// Create canvas element.
-		this.canvas = document.createElement("canvas");
-		document.body.appendChild(this.canvas);
+		this.canvas = document.querySelector("canvas");
 		this.ctx = this.canvas.getContext("2d");
 
 		// Canvas resizing.
@@ -179,6 +178,22 @@ class Renderer {
 		this.ctx.closePath();
 	}
 
+	renderProjectile(projectile) {
+		if (math.isOnScreen(projectile, player.camera, this.canvas)) {
+			this.ctx.beginPath();
+
+			this.ctx.fillStyle = projectile.color;
+			this.ctx.fillRect(
+				Math.round(projectile.x - player.camera.x),
+				Math.round(projectile.y - player.camera.y),
+				Math.round(projectile.width),
+				Math.round(projectile.height)
+			);
+
+			this.ctx.closePath();
+		}
+	}
+
 	renderPlayerLight(detail = 0.5) {
 		const playerCenter = {
 			x: player.x + player.width / 2,
@@ -190,7 +205,12 @@ class Renderer {
 			angle < player.angle + player.light.range;
 			angle += detail
 		) {
-			const rayTarget = math.cartesian2(angle, 2500);
+			let rayTarget = math.cartesian2(
+				angle,
+				(this.canvas.width + this.canvas.height) / 2.25
+			);
+			rayTarget.x += playerCenter.x;
+			rayTarget.y += playerCenter.y;
 			const ray = this.castRay(playerCenter, rayTarget);
 
 			this.draw2DRay(
@@ -312,28 +332,15 @@ class Renderer {
 			for (let x in level[y]) {
 				// If there is a wall here.
 				if (
-					level[y][x] != 0 &&
+					level[y][x] &&
 					world.isOnScreen(level[y][x], player.camera)
 				) {
+					const wall = level[y][x];
 					// Draw the wall.
-					this.ctx.beginPath();
+					const opac =
+						player.light.strength / math.distance(wall, player);
 
-					this.ctx.fillStyle = "green";
-					if (
-						math.distance(level[y][x], player) <=
-						wallSize + (player.width + player.height) / 2
-					) {
-						this.ctx.fillStyle = "yellow";
-					}
-
-					this.ctx.fillRect(
-						x * wallSize - player.camera.x,
-						y * wallSize - player.camera.y,
-						wallSize,
-						wallSize
-					);
-
-					this.ctx.closePath();
+					this.renderWall(wall, opac);
 				}
 			}
 		}
@@ -342,25 +349,48 @@ class Renderer {
 	renderLevel2d() {
 		// RENDER PLAYER
 		this.renderPlayerLight();
-		this.renderClient(player);
-
-		for (let client of storedClients) {
+		for (let projectile of storedProjectiles) {
 			if (
-				client &&
-				client.seen &&
+				projectile &&
 				math.isOnScreen(
 					{
-						x: client.x,
-						y: client.y,
-						width: player.width,
-						height: player.height,
+						x: projectile.x,
+						y: projectile.y,
+						width: projectile.width,
+						height: projectile.height,
 					},
 					player.camera,
 					draw.canvas
 				)
 			) {
-				this.renderClient(client, "red");
+				this.renderProjectile(projectile);
 			}
 		}
+		this.renderClient(player);
+
+		// RENDER CLIENTS
+		// for (let client of storedClients) {
+		// 	if (
+		// 		client &&
+		// 		client.seen &&
+		// 		math.isOnScreen(
+		// 			{
+		// 				x: client.x,
+		// 				y: client.y,
+		// 				width: player.width,
+		// 				height: player.height,
+		// 			},
+		// 			player.camera,
+		// 			draw.canvas
+		// 		)
+		// 	) {
+		// 		this.renderClient(client, "red");
+		// 	}
+		// }
+
+		// RENDER PROJECTILES
+
+		// Render the world.
+		// this.renderWorld(world);
 	}
 }

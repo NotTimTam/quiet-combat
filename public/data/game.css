@@ -24,6 +24,8 @@ canvas {
 	width: 100vw;
 	height: 100vh;
 
+	cursor: crosshair;
+
 	/* pixel-perfect */
 	image-rendering: pixelated;
 	image-rendering: crisp-edges;

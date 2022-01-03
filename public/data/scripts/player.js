@@ -8,6 +8,12 @@ class Player {
 		this.width = 8;
 		this.height = 8;
 		this.angle = 0;
+		this.health = 100;
+
+		this.scoreboard = {
+			deaths: 0,
+			kills: 0,
+		};
 
 		// Lighting system.
 		this.light = {
@@ -72,6 +78,7 @@ class Player {
 		this.mouse = {
 			x: 0,
 			y: 0,
+			down: false,
 		};
 		window.addEventListener("mousemove", (e) => {
 			this.mouse.x = (e.clientX / window.innerWidth) * draw.canvas.width;
@@ -85,6 +92,14 @@ class Player {
 
 		window.onkeyup = (e) => {
 			this.keys[e.key] = false;
+		};
+
+		this.lastBullet = 0;
+		window.onmousedown = (e) => {
+			this.mouse.down = true;
+		};
+		window.onmouseup = (e) => {
+			this.mouse.down = false;
 		};
 	}
 
@@ -200,6 +215,18 @@ class Player {
 		}
 	}
 
+	respawn() {
+		let newLoc = world.getSpawn();
+		this.x = newLoc.x;
+		this.y = newLoc.y;
+	}
+
+	kill() {
+		this.scoreboard.deaths++;
+		this.respawn();
+		this.health = 100;
+	}
+
 	input() {
 		// Check for collisions in the direction of travel and then apply the travel if there are none.
 		if (this.keys.d || this.keys.ArrowRight) {
@@ -216,6 +243,13 @@ class Player {
 
 		if (this.keys.s || this.keys.ArrowDown) {
 			this.physics.yVel += this.physics.accel;
+		}
+
+		// Shooting.
+		const bulletTime = 250;
+		if (this.mouse.down && Date.now() - this.lastBullet > bulletTime) {
+			this.lastBullet = Date.now();
+			fireProjectile();
 		}
 	}
 

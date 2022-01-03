@@ -9,7 +9,7 @@ let player;
 const initializeGame = (gameData) => {
 	// Create renderer.
 	draw = new Renderer();
-	world = new World(levels[gameData.level]);
+	world = new World(gameData.level);
 
 	let playerSpawn = world.getSpawn();
 	player = new Player(playerSpawn.x, playerSpawn.y);
@@ -17,7 +17,7 @@ const initializeGame = (gameData) => {
 	// Get client data from the server.
 	let refresh = 1;
 	window.setInterval(() => {
-		getClients();
+		getData();
 	}, refresh);
 
 	// Start the game loop.

@@ -2,5 +2,5 @@
 
 // Settings object.
 const settings = {
-	dev_mode: true,
+	dev_mode: false,
 };
